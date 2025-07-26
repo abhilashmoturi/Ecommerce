@@ -6,7 +6,7 @@ const Popular = () => {
   const[data_product,setData_product]=React.useState([]);
 
   useEffect(()=>{
-    fetch('https://ecommerce-wc28.onrender.com/popularinwomen').then((res)=>res.json()).then((data)=>setData_product(data));
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/popularinwomen`).then((res)=>res.json()).then((data)=>setData_product(data));
   },[])
 
   return (

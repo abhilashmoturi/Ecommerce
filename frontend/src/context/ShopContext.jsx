@@ -20,10 +20,10 @@ const ShopContextProvider = (props) => {
     const [authToken, setAuthToken] = useState(localStorage.getItem("auth-token"));
 
     useEffect(()=>{
-        fetch('https://ecommerce-wc28.onrender.com/allproducts').then((res)=>res.json()).then((data)=>setAllProducts(data));
+        fetch(`${process.env.REACT_APP_BACKEND_URL}/allproducts`).then((res)=>res.json()).then((data)=>setAllProducts(data));
         if(localStorage.getItem('auth-token')){
             setAuthToken(localStorage.getItem('auth-token'));
-            fetch('https://ecommerce-wc28.onrender.com/getcart', {
+            fetch(`${process.env.REACT_APP_BACKEND_URL}/getcart`, {
                 method:'GET',
                 headers: {
                     Accept:"application/form-data",
@@ -58,7 +58,7 @@ const ShopContextProvider = (props) => {
    const addToCart=(itemId)=>{
     setCartItem((prev)=>({...prev,[itemId]:prev[itemId]+1}));
     if(localStorage.getItem("auth-token")){
-        fetch('https://ecommerce-wc28.onrender.com/addtocart', {
+        fetch(`${process.env.REACT_APP_BACKEND_URL}/addtocart`, {
             method:'POST',
             headers: {
                 Accept:"application/form-data",
@@ -75,7 +75,7 @@ const ShopContextProvider = (props) => {
     setCartItem((prev)=>({...prev,[itemId]:prev[itemId]-1}
     ))
     if(localStorage.getItem('auth-token')){
-        fetch('https://ecommerce-wc28.onrender.com/removefromcart', {
+        fetch(`${process.env.REACT_APP_BACKEND_URL}/removefromcart`, {
             method:'POST',
             headers: {
                 Accept:"application/form-data",
