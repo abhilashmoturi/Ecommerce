@@ -38,9 +38,10 @@ const upload = multer({ storage });
 
 // Upload endpoint
 app.post("/upload", upload.single('product'), (req, res) => {
-  const imageUrl = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`;
+  const imageUrl = `https://ecommerce-wc28.onrender.com/images/${req.file.filename}`;
   res.json({ success: 1, image_url: imageUrl });
 });
+
 
 // Schema
 const Product = mongoose.model("Product", {
