@@ -153,6 +153,44 @@ app.get('/getcart', fetchUser, async (req, res) => {
   res.json(user.cartData);
 });
 
+// Search products endpoint
+app.get('/search', async (req, res) => {
+  try {
+    const { query, category } = req.query;
+    
+    if (!query) {
+      return res.status(400).json({ success: false, error: "Search query is required" });
+    }
+
+    // Build search criteria
+    let searchCriteria = {
+      available: true,
+      $or: [
+        { name: { $regex: query, $options: 'i' } },
+        { category: { $regex: query, $options: 'i' } }
+      ]
+    };
+
+    // Add category filter if specified
+    if (category && category !== 'all') {
+      searchCriteria.category = category;
+    }
+
+    const products = await Product.find(searchCriteria);
+    
+    res.json({
+      success: true,
+      products: products,
+      count: products.length,
+      query: query,
+      category: category || 'all'
+    });
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
