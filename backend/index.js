@@ -29,7 +29,7 @@ app.use('/images', express.static(path.join(__dirname, 'upload/images')));
 
 // Multer image upload config
 const storage = multer.diskStorage({
-  destination: path.join(__dirname, '../upload/images'),
+  destination: path.join(__dirname, 'upload/images'),
   filename: (req, file, cb) => {
     cb(null, `${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`);
   }
@@ -38,7 +38,8 @@ const upload = multer({ storage });
 
 // Upload endpoint
 app.post("/upload", upload.single('product'), (req, res) => {
-  const imageUrl = `https://ecommerce-wc28.onrender.com/images/${req.file.filename}`;
+  const baseUrl = process.env.BACKEND_URL || `http://localhost:${port}`;
+  const imageUrl = `${baseUrl}/images/${req.file.filename}`;
   res.json({ success: 1, image_url: imageUrl });
 });
 
