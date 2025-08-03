@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom'
 import { useContext } from 'react'
 import { ShopContext } from '../../context/ShopContext'
 import nav_dropdown from '../assets/nav_dropdown.png'
+import SearchBar from '../SearchBar/SearchBar'
 
 const Navbar = () => {
   const[menu,setMenu]=useState()
@@ -29,6 +30,7 @@ const Navbar = () => {
         <li onClick={()=>setMenu("womens")}><Link style={{textDecoration:"none"}} to={"/womens"}>Women</Link>{menu==="womens"?<hr/>:<></>}</li>
         <li onClick={()=>setMenu("kids")}><Link style={{textDecoration:"none"}} to={"/kids"}>Kids</Link>{menu==="kids"?<hr/>:<></>}</li>
       </ul>
+      <SearchBar />
       <div className='nav-login-cart'>
         {localStorage.getItem("auth-token")?<button onClick={()=>{localStorage.removeItem("auth-token");window.location.replace('/')}}>Logout</button>
         :<Link to="/login"><button>Login</button></Link>}
