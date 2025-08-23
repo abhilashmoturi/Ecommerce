@@ -5,8 +5,9 @@ const app = express();
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
-const path = require('path');
 const cors = require('cors');
+const { v2: cloudinary } = require('cloudinary');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const port = process.env.PORT || 4000;
 
@@ -16,34 +17,40 @@ app.use(cors());
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URL)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // Root route
 app.get("/", (req, res) => {
-  res.send("Express running");
+  res.send("Express running with Cloudinary");
 });
 
-// Serve static image folder
-app.use('/images', express.static(path.join(__dirname, 'upload/images')));
+// ================== CLOUDINARY CONFIG ==================
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-// Multer image upload config
-const storage = multer.diskStorage({
-  destination: path.join(__dirname, '../upload/images'),
-  filename: (req, file, cb) => {
-    cb(null, `${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`);
-  }
+// Multer storage with Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'ecommerce_products', // Folder name in Cloudinary
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp']
+  },
 });
 const upload = multer({ storage });
 
-// Upload endpoint
+// ✅ Upload endpoint (Cloudinary)
 app.post("/upload", upload.single('product'), (req, res) => {
-  const imageUrl = `https://ecommerce-wc28.onrender.com/images/${req.file.filename}`;
-  res.json({ success: 1, image_url: imageUrl });
+  res.json({
+    success: 1,
+    image_url: req.file.path // Cloudinary hosted URL
+  });
 });
 
-
-// Schema
+// ================== SCHEMAS ==================
 const Product = mongoose.model("Product", {
   id: Number,
   name: String,
@@ -63,7 +70,7 @@ const Users = mongoose.model("Users", {
   date: { type: Date, default: Date.now }
 });
 
-// Middleware for auth
+// ================== AUTH MIDDLEWARE ==================
 const fetchUser = async (req, res, next) => {
   const token = req.header('auth-token');
   if (!token) return res.status(401).send({ error: "Please authenticate using valid token" });
@@ -77,23 +84,28 @@ const fetchUser = async (req, res, next) => {
   }
 };
 
-// API Endpoints
+// ================== API ENDPOINTS ==================
+
+// Get all products
 app.get('/allproducts', async (req, res) => {
   const products = await Product.find({});
   res.send(products);
 });
 
+// New collections (last 8 excluding first one)
 app.get('/newcollections', async (req, res) => {
   const products = await Product.find({});
   const newcollection = products.slice(1).slice(-8);
   res.send(newcollection);
 });
 
+// Popular in women (first 4)
 app.get('/popularinwomen', async (req, res) => {
   const products = await Product.find({ category: "women" });
   res.send(products.slice(0, 4));
 });
 
+// Signup
 app.post('/signup', async (req, res) => {
   const existing = await Users.findOne({ email: req.body.email });
   if (existing) return res.status(400).json({ success: false, error: "User already exists" });
@@ -108,6 +120,7 @@ app.post('/signup', async (req, res) => {
   res.json({ success: true, token });
 });
 
+// Login
 app.post('/login', async (req, res) => {
   const user = await Users.findOne({ email: req.body.email });
   if (!user || req.body.password !== user.password) {
@@ -118,6 +131,7 @@ app.post('/login', async (req, res) => {
   res.json({ success: true, token });
 });
 
+// Add product
 app.post('/addproduct', async (req, res) => {
   const products = await Product.find({});
   const lastId = products.length ? products.slice(-1)[0].id : 0;
@@ -127,11 +141,13 @@ app.post('/addproduct', async (req, res) => {
   res.json({ success: 1, name: req.body.name });
 });
 
+// Remove product
 app.post('/removeproduct', async (req, res) => {
   await Product.findOneAndDelete({ id: req.body.id });
   res.json({ success: 1, name: req.body.name });
 });
 
+// Add to cart
 app.post('/addtocart', fetchUser, async (req, res) => {
   const user = await Users.findById(req.user.id);
   user.cartData[req.body.itemId] += 1;
@@ -139,6 +155,7 @@ app.post('/addtocart', fetchUser, async (req, res) => {
   res.send("Added to cart");
 });
 
+// Remove from cart
 app.post('/removefromcart', fetchUser, async (req, res) => {
   const user = await Users.findById(req.user.id);
   if (user.cartData[req.body.itemId] > 0) {
@@ -148,12 +165,13 @@ app.post('/removefromcart', fetchUser, async (req, res) => {
   res.send("Removed from cart");
 });
 
+// Get cart
 app.get('/getcart', fetchUser, async (req, res) => {
   const user = await Users.findById(req.user.id);
   res.json(user.cartData);
 });
 
-// Start the server
+// ================== START SERVER ==================
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`✅ Server running at ${process.env.BACKEND_URL} on port ${port}`);
 });
