@@ -20,11 +20,11 @@ const AddProduct = () => {
     let formData = new FormData();
     formData.append('product', image);
 
-    // ✅ Vite env variable (with fallback for local)
+  
     const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 
     try {
-      // Upload image
+      
       const uploadResp = await fetch(`${backendUrl}/upload`, {
         method: 'POST',
         headers: {
@@ -51,10 +51,10 @@ const AddProduct = () => {
         const data = await addResp.json();
 
         data.success
-          ? alert("✅ Product Added Successfully!")
-          : alert("❌ Product Not Added");
+          ? alert(" Product Added Successfully!")
+          : alert(" Product Not Added");
       } else {
-        alert("❌ Image upload failed");
+        alert(" Image upload failed");
       }
     } catch (err) {
       console.error("Error adding product:", err);
